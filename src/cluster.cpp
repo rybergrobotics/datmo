@@ -81,6 +81,14 @@ Cluster::Cluster(unsigned long int id, const pointList& new_points, const double
   populateTrackingMsgs(dt);
 }
 
+  double Cluster::distanceFromEgoRobot(){
+    return( pow(pow(cx - ego_coordinates.first,2.0)+pow(cy - ego_coordinates.second,2.0),0.5));
+  }
+
+  double Cluster::speed(){
+    return( pow(pow(cvx,2.0) + pow(cvy,2.0),0.5));
+  }
+
 void Cluster::update(const pointList& new_points, const double dt, const tf::Transform& ego_pose) {
 
   ego_coordinates.first = ego_pose.getOrigin().getX();
@@ -98,6 +106,18 @@ void Cluster::update(const pointList& new_points, const double dt, const tf::Tra
   Lshape.BoxModel(cx, cy, cvx, cvy, th, psi, comega, L1_box, L2_box, length_box, width_box);
 
   populateTrackingMsgs(dt);
+
+}
+
+geometry_msgs::Pose Cluster::getPose(){
+
+  geometry_msgs::Pose msg;
+  msg.position.x = cx;
+  msg.position.y = cy;
+
+  quaternion.setRPY(0, 0, psi);
+  msg.orientation = tf2::toMsg(quaternion);
+  return msg;
 
 }
 

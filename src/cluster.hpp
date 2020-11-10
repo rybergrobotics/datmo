@@ -35,6 +35,7 @@
 #include <Eigen/Dense>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Pose.h>
 #include "datmo/Track.h"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -72,12 +73,15 @@ public:
   visualization_msgs::Marker getBoxModelKFVisualisationMessage();
   visualization_msgs::Marker getLShapeVisualisationMessage();
   visualization_msgs::Marker getBoxSolidVisualisationMessage();
+  geometry_msgs::Pose getPose();
 
   void update(const pointList&, const double dt, const tf::Transform& ego_pose);
 
   std::pair<double, double> mean() { return mean_values; }; //Return mean of cluster.
   double meanX() { return mean_values.first; };
   double meanY() { return mean_values.second;};
+  double distanceFromEgoRobot();
+  double speed();
 
   LshapeTracker Lshape; 
 

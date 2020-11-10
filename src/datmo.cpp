@@ -46,6 +46,7 @@ Datmo::Datmo(){
 
   pub_tracks_box_kf     = n.advertise<datmo::TrackArray>("datmo/box_kf", 10);
   pub_marker_array   = n.advertise<visualization_msgs::MarkerArray>("datmo/marker_array", 10);
+  pub_pose_array   = n.advertise<geometry_msgs::PoseArray>("uvc/humans", 10);
   sub_scan = n.subscribe("/scan", 1, &Datmo::callback, this);
 
 }
@@ -69,7 +70,7 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     tf_listener.lookupTransform(world_frame, lidar_frame, ros::Time(0), ego_pose);
     
     //TODO implement varying calculation of dt
-    dt = 0.08;
+    dt = 0.1;
 
     if (time > ros::Time::now()){clusters.clear();}
     time = ros::Time::now();
@@ -158,6 +159,7 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     for(unsigned int i=0; i<point_clusters.size();++i){
       if(g_matched[i] == false && point_clusters[i].size()< max_cluster_size){
 	Cluster cl(cclusters, point_clusters[i], dt, world_frame, ego_pose);
+        :A
 	cclusters++;
 	clusters.push_back(cl);
       } 
@@ -166,9 +168,13 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     //Visualizations and msg publications
     visualization_msgs::MarkerArray marker_array;
     datmo::TrackArray track_array_box_kf; 
+    geometry_msgs::PoseArray pose_array; 
     for (unsigned int i =0; i<clusters.size();i++){
 
       track_array_box_kf.tracks.push_back(clusters[i].msg_track_box_kf);
+      if(clusters[i].distanceFromEgoRobot()<3 && clusters[i].speed() >0.8){
+	pose_array.poses.push_back(clusters[i].getPose());
+      }
      
       if (p_marker_pub){
         marker_array.markers.push_back(clusters[i].getClosestCornerPointVisualisationMessage());
@@ -185,6 +191,10 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
         marker_array.markers.push_back(clusters[i].getBoxSolidVisualisationMessage());
       }; 
     }
+
+    pose_array.header.stamp = ros::Time::now();
+    pose_array.header.frame_id = "/map";
+    pub_pose_array.publish(pose_array);
 
     pub_marker_array.publish(marker_array);
     pub_tracks_box_kf.publish(track_array_box_kf);

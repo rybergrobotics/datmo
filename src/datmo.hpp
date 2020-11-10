@@ -43,6 +43,7 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseArray.h>
 #include <tf/tf.h>
 #include <datmo/TrackArray.h>
 #include <datmo/Track.h>
@@ -74,6 +75,7 @@ public:
 private:
   ros::Publisher pub_marker_array; 
   ros::Publisher pub_tracks_box_kf;
+  ros::Publisher pub_pose_array;
   ros::Subscriber sub_scan;
   sensor_msgs::LaserScan scan;
   vector<Cluster> clusters;
