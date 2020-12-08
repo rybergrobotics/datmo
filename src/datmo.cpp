@@ -116,18 +116,21 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
 
     //Find the smallest euclidean distance and associate if smaller than the threshold 
     vector<pair <int,int>> pairs;
-    for(unsigned int c=0; c<clusters.size();++c){
+
+    for(unsigned int g=0; g<point_clusters.size();++g){
       unsigned int position;
       double min_distance = euclidean_distance;
-      for(unsigned int g=0; g<point_clusters.size();++g){
-    if(euclidean[g][c] < min_distance){
-      min_distance = euclidean[g][c];
-      position = g;
-    }
+
+
+      for(unsigned int c=0; c<clusters.size();++c){
+	if(euclidean[g][c] < min_distance){
+	  min_distance = euclidean[g][c];
+	  position = c;
+	}
       }
       if(min_distance < euclidean_distance){
-        g_matched[position] = true, c_matched[c] = true;
-        pairs.push_back(pair<int,int>(c,position));
+        g_matched[g] = true, c_matched[position] = true;
+        pairs.push_back(pair<int,int>(position,g));
       }
     }
 
@@ -159,7 +162,6 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     for(unsigned int i=0; i<point_clusters.size();++i){
       if(g_matched[i] == false && point_clusters[i].size()< max_cluster_size){
 	Cluster cl(cclusters, point_clusters[i], dt, world_frame, ego_pose);
-        :A
 	cclusters++;
 	clusters.push_back(cl);
       } 
@@ -167,28 +169,29 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     
     //Visualizations and msg publications
     visualization_msgs::MarkerArray marker_array;
-    datmo::TrackArray track_array_box_kf; 
+    //datmo::TrackArray track_array_box_kf; 
     geometry_msgs::PoseArray pose_array; 
     for (unsigned int i =0; i<clusters.size();i++){
 
-      track_array_box_kf.tracks.push_back(clusters[i].msg_track_box_kf);
-      if(clusters[i].distanceFromEgoRobot()<3 && clusters[i].speed() >0.8){
+    ROS_INFO_STREAM("Number of clusters:"<< clusters.size());
+      //track_array_box_kf.tracks.push_back(clusters[i].msg_track_box_kf);
+      if(clusters[i].distanceFromEgoRobot()<2 && clusters[i].speed() >0.5 && clusters[i].size() <10){
 	pose_array.poses.push_back(clusters[i].getPose());
       }
      
       if (p_marker_pub){
-        marker_array.markers.push_back(clusters[i].getClosestCornerPointVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getBoundingBoxCenterVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getArrowVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getThetaL1VisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getThetaL2VisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getThetaBoxVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getClusterVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getBoundingBoxVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getBoxModelKFVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getLShapeVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getLineVisualisationMessage());
-        marker_array.markers.push_back(clusters[i].getBoxSolidVisualisationMessage());
+        //marker_array.markers.push_back(clusters[i].getClosestCornerPointVisualisationMessage());
+        //marker_array.markers.push_back(clusters[i].getBoundingBoxCenterVisualisationMessage());
+	marker_array.markers.push_back(clusters[i].getArrowVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getThetaL1VisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getThetaL2VisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getThetaBoxVisualisationMessage());
+	marker_array.markers.push_back(clusters[i].getClusterVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getBoundingBoxVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getBoxModelKFVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getLShapeVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getLineVisualisationMessage());
+	//marker_array.markers.push_back(clusters[i].getBoxSolidVisualisationMessage());
       }; 
     }
 
@@ -197,7 +200,7 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     pub_pose_array.publish(pose_array);
 
     pub_marker_array.publish(marker_array);
-    pub_tracks_box_kf.publish(track_array_box_kf);
+    //pub_tracks_box_kf.publish(track_array_box_kf);
     visualiseGroupedPoints(point_clusters);
     
   }
